@@ -1,0 +1,21 @@
+- name: Prepare manager host
+  hosts: manager-host
+  roles:
+    - role: "{{ playbook_dir|dirname|dirname }}"
+      vars:
+        hids_host_role: manager
+
+- name: Prepare agent host
+  hosts: agent-host
+  roles:
+    - role: "{{ playbook_dir|dirname|dirname }}"
+      vars:
+        hids_host_role: agent
+        hids_agent_name: test1
+        hids_manager: manager-host
+
+- name: Prepare manager host
+  hosts: manager-host
+  tasks:
+    - name: Deregister agent
+      command: /var/ossec/bin/manage_agents -r 001

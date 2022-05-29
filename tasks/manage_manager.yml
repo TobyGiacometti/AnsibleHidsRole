@@ -1,0 +1,23 @@
+- name: Install packages for manager
+  apt:
+    name:
+      - curl
+      - procps
+      - wazuh-manager
+    update_cache: true
+  become: true
+
+- name: Start manager on boot
+  service:
+    name: wazuh-manager
+    enabled: true
+  become: true
+
+- name: Secure API
+  script:
+    cmd: set-api-password
+    executable: /bin/bash
+  become: true
+  register: hids_set_api_password_result
+  changed_when: hids_set_api_password_result.rc != 64
+  failed_when: hids_set_api_password_result.rc not in [0, 64]

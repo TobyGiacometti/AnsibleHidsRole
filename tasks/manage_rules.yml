@@ -1,0 +1,16 @@
+- name: Ensure that rules are not accidentally overridden
+  fail:
+    msg: The hids_rules variable cannot be used together with the Wazuh rule_include option.
+  when:
+    - hids_rules
+    - hids_config.ruleset.rule_include is defined
+
+- name: Manage rules
+  template:
+    src: custom_rules.xml.j2
+    dest: /var/ossec/etc/rules/custom_rules.xml
+    mode: 0640
+    owner: root
+    group: wazuh
+  become: true
+  notify: hids_wazuh_manager_restart_handler

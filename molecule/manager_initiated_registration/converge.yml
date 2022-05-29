@@ -1,0 +1,8 @@
+- name: Converge agent host
+  hosts: agent-host
+  roles:
+    - role: "{{ playbook_dir|dirname|dirname }}"
+      vars:
+        hids_host_role: agent
+        hids_agent_name: test1
+        hids_manager: manager-host

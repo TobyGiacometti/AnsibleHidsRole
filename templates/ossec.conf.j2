@@ -1,0 +1,5 @@
+{% import 'xml.j2' as xml %}
+{% set hids_api_config = hids_config.pop('api', {}) %}
+<ossec_config>
+{{ xml.render(hids_config)|indent(2, true) -}}
+</ossec_config>

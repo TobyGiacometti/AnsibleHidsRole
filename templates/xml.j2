@@ -1,0 +1,37 @@
+{% macro render(data, tag='') %}
+{# Dictionary processing logic #}
+{% if data is mapping %}
+{% for tag, content in data.items() %}
+{# Boolean value #}
+{% if content is sameas true %}
+<{{ tag }}/>
+{# String/number value #}
+{% elif content is string or content is number %}
+<{{ tag }}>{{ content }}</{{ tag.split(' ')[0] }}>
+{# Nested dict #}
+{% elif content is mapping %}
+<{{ tag }}>
+{% if content %}
+{{ render(content)|indent(2, true) -}}
+{% endif %}
+</{{ tag.split(' ')[0] }}>
+{# Nested list #}
+{% elif content is sequence %}
+{{ render(content, tag) -}}
+{% endif %}
+{% endfor %}
+{# List processing logic #}
+{% elif data is sequence %}
+{% for content in data %}
+{# String/number value #}
+{% if content is string or content is number %}
+<{{ tag }}>{{ content }}</{{ tag.split(' ')[0] }}>
+{# Nested dict #}
+{% elif content is mapping %}
+<{{ tag }}>
+{{ render(content)|indent(2, true) -}}
+</{{ tag.split(' ')[0] }}>
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endmacro %}

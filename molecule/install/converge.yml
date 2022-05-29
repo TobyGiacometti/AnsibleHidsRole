@@ -1,0 +1,38 @@
+- name: Converge manager host
+  hosts: manager-host
+  roles:
+    - role: "{{ playbook_dir|dirname|dirname }}"
+      vars:
+        hids_host_role: manager
+        hids_rules:
+          group name="ossec,":
+            rule id="504" level="0" overwrite="yes":
+              if_sid: 500
+              match: Agent disconnected
+              description: Ossec agent disconnected.
+        hids_config:
+          global:
+            email_to:
+              - user1@domain.test
+              - user2@domain.test
+          email_alerts:
+            email_to: user3@domain.test
+            do_not_delay: true
+
+- name: Converge agent host
+  hosts: agent-host
+  roles:
+    - role: "{{ playbook_dir|dirname|dirname }}"
+      vars:
+        hids_host_role: agent
+        hids_agent_name: test
+        hids_manager: manager-host
+        hids_config:
+          client:
+            enrollment:
+              - enabled: "no"
+                port: 1515
+              - enabled: "no"
+                port: 1515
+          labels:
+            label key="network.ip": 10.0.1.0

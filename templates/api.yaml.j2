@@ -1,0 +1,3 @@
+{% if hids_config.api is defined %}
+{{ hids_config.api|to_nice_yaml(width=999) }}
+{% endif %}

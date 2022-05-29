@@ -1,0 +1,50 @@
+- name: Verify manager host
+  hosts: manager-host
+  tasks:
+    - name: Retrieve state of API password
+      shell:
+        cmd: curl --fail --insecure --user wazuh:$(cat /root/wazuh-api-password) https://localhost:55000/security/user/authenticate
+        warn: false
+      register: api_token_result
+      failed_when: false
+
+    - name: Retrieve state of rules
+      stat:
+        path: /var/ossec/etc/rules/custom_rules.xml
+      register: rules_stat_result
+
+    - name: Retrieve state of main configuration
+      stat:
+        path: /var/ossec/etc/ossec.conf
+      register: main_config_stat_result
+
+    - name: Retrieve state of API configuration
+      stat:
+        path: /var/ossec/api/configuration/api.yaml
+      register: api_config_stat_result
+
+    - name: Run tests
+      assert:
+        that:
+          - api_token_result.rc == 0
+          - rules_stat_result.stat.checksum == '3708327089989a810c972ea0dd370e6000c5d07d'
+          - main_config_stat_result.stat.checksum == '050b9afbc2d6cec86e79d1cc1037c6fbfed08e03'
+          - api_config_stat_result.stat.checksum == '16f6031d1f65f6f03b27b15fa4642057d9051646'
+
+- name: Verify agent host
+  hosts: agent-host
+  tasks:
+    - name: Retrieve state of agent registration
+      command: /var/ossec/bin/manage_agents -l
+      register: agent_list_result
+
+    - name: Retrieve state of main configuration
+      stat:
+        path: /var/ossec/etc/ossec.conf
+      register: main_config_stat_result
+
+    - name: Run tests
+      assert:
+        that:
+          - "agent_list_result.stdout is search('ID: 001, Name: test, IP: any')"
+          - main_config_stat_result.stat.checksum == '5402d1abba2bb700cea620036d8ed9704e228185'

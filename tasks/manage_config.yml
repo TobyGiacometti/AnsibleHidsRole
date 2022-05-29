@@ -1,0 +1,39 @@
+- name: Retrieve manager hostname
+  setup:
+    filter: ansible_nodename
+    gather_subset:
+      - "!all"
+      - "!min"
+      - network
+  become: true
+  delegate_to: "{{ hids_manager }}"
+  delegate_facts: true
+  when: hids_host_role == 'agent'
+
+- name: Load configuration defaults
+  include_vars:
+    file: "{{ hids_host_role }}_config_defaults.yml"
+    name: hids_config_defaults
+
+- name: Set configuration defaults
+  set_fact:
+    hids_config: "{{ hids_config_defaults|combine(hids_config, recursive=true) }}"
+
+- name: Manage main configuration
+  template:
+    src: ossec.conf.j2
+    dest: /var/ossec/etc/ossec.conf
+    mode: 0660
+    group: wazuh
+  become: true
+  notify: hids_wazuh_{{ hids_host_role }}_restart_handler
+
+- name: Manage API configuration
+  template:
+    src: api.yaml.j2
+    dest: /var/ossec/api/configuration/api.yaml
+    mode: 0660
+    group: wazuh
+  become: true
+  notify: hids_wazuh_manager_restart_handler
+  when: hids_host_role == 'manager'

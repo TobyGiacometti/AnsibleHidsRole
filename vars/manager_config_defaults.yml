@@ -1,0 +1,13 @@
+auth:
+  disabled: "yes"
+api:
+  host: 127.0.0.1
+remote:
+  connection: secure
+# local_rules.xml is not being loaded automatically (bug?). We therefore define
+# our own custom rules file.
+ruleset: "{% if hids_rules %}\
+  {{ {'rule_include':'etc/rules/custom_rules.xml'} }}\
+  {% else %}\
+  {{ [] }}\
+  {% endif %}"

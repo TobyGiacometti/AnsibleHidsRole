@@ -1,0 +1,18 @@
+driver:
+  name: docker
+platforms:
+  - name: manager-host
+    image: geerlingguy/docker-debian10-ansible:latest
+    command: /sbin/init
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+
+  - name: agent-host
+    image: geerlingguy/docker-debian10-ansible:latest
+    command: /sbin/init
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true

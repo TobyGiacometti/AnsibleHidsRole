@@ -1,0 +1,24 @@
+- name: Install packages for APT repository
+  apt:
+    name:
+      - curl
+      - gpg
+    update_cache: true
+  become: true
+
+- name: Install APT repository key
+  shell:
+    cmd: |
+      test -f {{ hids_apt_key_file|quote }} && exit 64
+      curl https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --dearmor >{{ hids_apt_key_file|quote }}
+      test $? -eq 0 || { rm {{ hids_apt_key_file|quote }}; exit 1; }
+  become: true
+  register: hids_apt_key_install_result
+  changed_when: hids_apt_key_install_result.rc != 64
+  failed_when: hids_apt_key_install_result.rc not in [0, 64]
+
+- name: Add APT repository
+  apt_repository:
+    repo: deb [signed-by={{ hids_apt_key_file }}] https://packages.wazuh.com/4.x/apt/ stable main
+    filename: wazuh
+  become: true

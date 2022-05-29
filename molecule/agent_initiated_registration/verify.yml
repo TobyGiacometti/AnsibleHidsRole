@@ -1,0 +1,11 @@
+- name: Verify agent host
+  hosts: agent-host
+  tasks:
+    - name: Retrieve state of agent registration
+      command: /var/ossec/bin/manage_agents -l
+      register: agent_list_result
+
+    - name: Run tests
+      assert:
+        that:
+          - "agent_list_result.stdout is search('ID: 001, Name: test, IP: any')"

@@ -1,0 +1,21 @@
+- name: Prepare manager host
+  hosts: manager-host
+  roles:
+    - role: "{{ playbook_dir|dirname|dirname }}"
+      vars:
+        hids_host_role: manager
+
+- name: Prepare agent host
+  hosts: agent-host
+  roles:
+    - role: "{{ playbook_dir|dirname|dirname }}"
+      vars:
+        hids_host_role: agent
+        hids_agent_name: test
+        hids_manager: manager-host
+  post_tasks:
+    - name: Remove agent
+      apt:
+        name: wazuh-agent
+        state: absent
+        purge: true

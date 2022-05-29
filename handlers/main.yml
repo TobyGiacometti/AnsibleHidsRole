@@ -1,0 +1,13 @@
+- name: Restart service wazuh-manager
+  listen: hids_wazuh_manager_restart_handler
+  service:
+    name: wazuh-manager
+    state: restarted
+  become: true
+
+- name: Restart service wazuh-agent
+  listen: hids_wazuh_agent_restart_handler
+  service:
+    name: wazuh-agent
+    state: restarted
+  become: true

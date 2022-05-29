@@ -1,0 +1,64 @@
+- name: Install packages for agent
+  apt:
+    name:
+      - procps
+      - wazuh-agent
+    update_cache: true
+  become: true
+
+- name: Start agent on boot
+  service:
+    name: wazuh-agent
+    enabled: true
+  become: true
+
+- name: Retrieve local agent registration state
+  shell: |
+    result=$(/var/ossec/bin/manage_agents -l)
+    test $? -eq 0 || { echo "$result" >&2; exit 1; }
+    echo "$result"
+  become: true
+  register: hids_local_agent_list_result
+  changed_when: false
+
+- name: Retrieve agent ID from manager  # noqa 306
+  shell: |
+    result=$(/var/ossec/bin/manage_agents -l)
+    test $? -eq 0 || { echo "$result" >&2; exit 1; }
+    result=$(echo "$result" | grep "Name: "{{ hids_agent_name|quote }}", IP:")
+    test $? -lt 2 || exit 1
+    test -n "$result" || exit 0
+    echo "$result" | grep --only-matching --perl-regexp 'ID: \K[0-9]+'
+  become: true
+  register: hids_manager_agent_id_result
+  delegate_to: "{{ hids_manager }}"
+  changed_when: false
+
+- name: Register agent with manager  # noqa 306
+  shell: |
+    result=$(/var/ossec/bin/manage_agents -j -a any -n {{ hids_agent_name|quote }})
+    test $? -eq 0 || { echo "$result" >&2; exit 1; }
+    echo "$result" | grep --only-matching --perl-regexp '"id":"\K[0-9]+'
+  become: true
+  register: hids_agent_add_result
+  delegate_to: "{{ hids_manager }}"
+  when: hids_manager_agent_id_result.stdout|length == 0
+
+- name: Retrieve agent key from manager  # noqa 306 503
+  shell: |
+    result=$(/var/ossec/bin/manage_agents -e {{ hids_agent_add_result.stdout|default(hids_manager_agent_id_result.stdout)|quote }})
+    test $? -eq 0 || { echo "$result" >&2; exit 1; }
+    echo "$result" | tail -n 1
+  become: true
+  register: hids_manager_agent_key_result
+  delegate_to: "{{ hids_manager }}"
+  changed_when: false
+  when: >
+    hids_local_agent_list_result is not search('ID: [0-9]+') or
+    hids_agent_add_result.changed
+
+- name: Set agent key  # noqa 306
+  shell: yes | /var/ossec/bin/manage_agents -i {{ hids_manager_agent_key_result.stdout|quote }}
+  become: true
+  notify: hids_wazuh_agent_restart_handler
+  when: not hids_manager_agent_key_result.skipped|default(false)

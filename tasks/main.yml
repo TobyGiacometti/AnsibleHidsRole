@@ -1,0 +1,17 @@
+- name: Include package manager management tasks
+  include_tasks: manage_package_manager.yml
+
+- name: Include manager management tasks
+  include_tasks: manage_manager.yml
+  when: hids_host_role == 'manager'
+
+- name: Include agent management tasks
+  include_tasks: manage_agent.yml
+  when: hids_host_role == 'agent'
+
+- name: Include rule management tasks
+  include_tasks: manage_rules.yml
+  when: hids_host_role == 'manager'
+
+- name: Include configuration management tasks
+  include_tasks: manage_config.yml
